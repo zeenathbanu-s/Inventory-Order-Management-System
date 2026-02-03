@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory & Order Management System - Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css?v=2.1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-brand">
+                <h1>📊 Inventory & Order Management System</h1>
+                <p class="header-subtitle">Complete Business Operations Platform</p>
+            </div>
+            <div class="header-actions">
+                <div class="user-info">
+                    <span id="welcomeMessage">Welcome, Admin</span>
+                    <span class="current-date" id="currentDate"></span>
+                </div>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <nav class="dashboard-nav">
+            <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+            <button class="nav-btn" data-section="products">Products</button>
+            <button class="nav-btn" data-section="orders">Orders</button>
+            <button class="nav-btn" data-section="reports">Reports</button>
+            <button class="nav-btn" data-section="users" id="usersNavBtn" style="display: none;">Users</button>
+        </nav>
+
+        <main class="dashboard-main">
+            <!-- Dashboard Overview Section -->
+            <section id="dashboard-section" class="dashboard-section active">
+                <div class="section-header">
+                    <h2>📈 Business Overview Dashboard</h2>
+                    <div class="dashboard-info">
+                        <span class="last-updated">Last Updated: <span id="lastUpdated">Now</span></span>
+                    </div>
+                </div>
+                
+                <!-- Key Performance Indicators -->
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-content">
+                            <h3>Total Products</h3>
+                            <div class="stat-value" id="totalProducts">0</div>
+                            <div class="stat-change positive" id="productsChange">+0 this month</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <h3>Total Orders</h3>
+                            <div class="stat-value" id="totalOrders">0</div>
+                            <div class="stat-change positive" id="ordersChange">+0 this month</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-content">
+                            <h3>Pending Orders</h3>
+                            <div class="stat-value" id="pendingOrders">0</div>
+                            <div class="stat-change neutral" id="pendingChange">Needs attention</div>
+                        </div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-content">
+                            <h3>Low Stock Alerts</h3>
+                            <div class="stat-value" id="lowStockCount">0</div>
+                            <div class="stat-change negative" id="stockChange">Requires action</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Widgets Grid -->
+                <div class="dashboard-widgets">
+                    <div class="widget large">
+                        <div class="widget-header">
+                            <h3>📊 Sales Overview</h3>
+                            <select id="salesPeriod" class="widget-control">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                            </select>
+                        </div>
+                        <div class="widget-content">
+                            <canvas id="salesChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>🛒 Recent Orders</h3>
+                            <span class="widget-badge" id="recentOrdersBadge">0</span>
+                        </div>
+                        <div id="recentOrdersList" class="widget-content scrollable"></div>
+                    </div>
+                    
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>⚠️ Low Stock Alerts</h3>
+                            <span class="widget-badge danger" id="lowStockBadge">0</span>
+                        </div>
+                        <div id="lowStockList" class="widget-content scrollable"></div>
+                    </div>
+                    
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>🏆 Top Products</h3>
+                            <span class="widget-badge success">Top 5</span>
+                        </div>
+                        <div id="topProductsList" class="widget-content scrollable"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="products-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Products Management</h2>
+                    <button id="addProductBtn" class="primary-btn">Add Product</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="productsTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Low Stock Threshold</th>
+                                <th>Image</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Orders Management</h2>
+                    <button id="addOrderBtn" class="primary-btn">Create Order</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="ordersTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Email</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>📊 Business Analytics & Reports</h2>
+                    <div class="report-controls">
+                        <select id="reportPeriod">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                        <button id="refreshReports" class="secondary-btn">🔄 Refresh Data</button>
+                        <button id="exportReports" class="primary-btn">📥 Export Report</button>
+                    </div>
+                </div>
+                
+                <!-- Analytics Overview Cards -->
+                <div class="analytics-overview">
+                    <div class="analytics-card">
+                        <h3>💰 Revenue Analytics</h3>
+                        <div class="analytics-content">
+                            <div class="metric-large">
+                                <span class="metric-label">Total Revenue</span>
+                                <span class="metric-value" id="totalRevenue">$0.00</span>
+                            </div>
+                            <div class="metric-row">
+                                <div class="metric">
+                                    <span class="metric-label">Average Order Value</span>
+                                    <span class="metric-value" id="avgOrderValue">$0.00</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Orders Count</span>
+                                    <span class="metric-value" id="totalOrdersReport">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>📦 Inventory Analytics</h3>
+                        <div class="analytics-content">
+                            <div class="metric-large">
+                                <span class="metric-label">Inventory Value</span>
+                                <span class="metric-value" id="inventoryValue">$0.00</span>
+                            </div>
+                            <div class="metric-row">
+                                <div class="metric">
+                                    <span class="metric-label">Total Products</span>
+                                    <span class="metric-value" id="totalProductsReport">0</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-label">Low Stock Items</span>
+                                    <span class="metric-value danger" id="lowStockItems">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>📈 Sales Trend Analysis</h3>
+                            <div class="chart-legend">
+                                <span class="legend-item"><span class="legend-color primary"></span>Daily Sales</span>
+                                <span class="legend-item"><span class="legend-color success"></span>Orders Count</span>
+                            </div>
+                        </div>
+                        <canvas id="salesTrendChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>🥧 Product Categories Distribution</h3>
+                            <div class="chart-info">Revenue by Category</div>
+                        </div>
+                        <canvas id="categoryChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>📊 Inventory Status Overview</h3>
+                            <div class="chart-info">Stock Levels Analysis</div>
+                        </div>
+                        <canvas id="inventoryChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>🏆 Top Performing Products</h3>
+                            <div class="chart-info">By Revenue Generated</div>
+                        </div>
+                        <canvas id="topProductsChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Detailed Analytics Tables -->
+                <div class="analytics-tables">
+                    <div class="table-container">
+                        <h3>🎯 Top Products Performance</h3>
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Revenue</th>
+                                    <th>Units Sold</th>
+                                    <th>Avg. Price</th>
+                                    <th>Stock Level</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProductsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <button id="addUserBtn" class="primary-btn">Add User</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="usersTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="productModalTitle">Add Product</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="productName">Name *</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label for="productSku">SKU *</label>
+                    <input type="text" id="productSku" required>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">Description</label>
+                    <textarea id="productDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="productCategory">Category</label>
+                    <input type="text" id="productCategory">
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">Price *</label>
+                    <input type="number" id="productPrice" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="productStock">Stock Quantity *</label>
+                    <input type="number" id="productStock" required>
+                </div>
+                <div class="form-group">
+                    <label for="productThreshold">Low Stock Threshold</label>
+                    <input type="number" id="productThreshold" value="10">
+                </div>
+                <div class="form-group">
+                    <label for="productImage">Product Image</label>
+                    <input type="file" id="productImage" accept="image/*">
+                    <div id="imagePreview" class="image-preview"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" id="cancelProductBtn">Cancel</button>
+                    <button type="submit" class="primary-btn">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Order</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="customerName">Customer Name *</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerEmail">Customer Email *</label>
+                    <input type="email" id="customerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Order Items</label>
+                    <div id="orderItems">
+                        <div class="order-item">
+                            <select class="product-select" required>
+                                <option value="">Select Product</option>
+                            </select>
+                            <input type="number" class="quantity-input" placeholder="Quantity" min="1" required>
+                            <button type="button" class="remove-item-btn">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" id="addItemBtn" class="secondary-btn">Add Item</button>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" id="cancelOrderBtn">Cancel</button>
+                    <button type="submit" class="primary-btn">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add User</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">Password *</label>
+                    <input type="password" id="userPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Role *</label>
+                    <select id="userRole" required>
+                        <option value="staff">Staff</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" id="cancelUserBtn">Cancel</button>
+                    <button type="submit" class="primary-btn">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/script.js?v=2.0"></script>
+</body>
+</html>
